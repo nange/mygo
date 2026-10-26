@@ -1,0 +1,5 @@
+{
+  "name": "Tray Menu",
+  "identifier": "dev.mygo.examples.tray-menu",
+  "out": "build"
+}

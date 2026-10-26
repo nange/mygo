@@ -96,7 +96,29 @@ item := menu.ItemByID("sidebar")
 item.SetChecked(false)
 ```
 
-`Menu.Append` and `Menu.Insert` add items.
+`Menu.Append`, `Menu.Insert` and `Menu.Remove` add and remove items. A
+submenu's items are changed through its menu, `MenuItem.Menu`:
+
+```go
+serversItem := menu.ItemByID("servers")
+servers := serversItem.Menu()
+servers.Append(&mygo.MenuItem{Label: "Tokyo", Click: connectTo("tokyo")})
+servers.Remove(servers.Items()[0])
+serversItem.SetLabel(fmt.Sprintf("Servers (%d)", len(servers.Items())))
+```
+
+The menu of an app or a window follows these changes at once. A tray shows
+the structure it was given last, so after adding or removing items of its
+menu, give it the menu again with `Tray.SetMenu`. The labels and states of
+the items it already has change by themselves:
+
+```go
+servers.Append(&mygo.MenuItem{Label: "Osaka"})
+tray.SetMenu(menu)
+```
+
+[The tray menu example](../examples/tray-menu) changes its menu this way
+while it runs.
 
 ### Icons
 
@@ -278,8 +300,9 @@ the tray with `SetIcon`, `SetMenu`, `SetToolTip` and, on macOS,
 `SetTitle`, the text next to the icon; `Destroy` removes it.
 
 The items of a tray's menu can show [icons](#icons), as a country's flag
-beside each server, and change as the items of any menu do: the menu
-shows their state the next time it opens.
+beside each server, and change as the items of any menu do: a new label,
+check or icon shows in the menu, and adding or removing items takes effect
+when the menu is given to the tray again with `Tray.SetMenu`.
 
 A title that shows a changing number, such as a network speed, should
 keep its width, or the item grows and shrinks and the icon and the items
@@ -362,6 +385,10 @@ Apps that live in the menu bar usually drop their Dock icon on macOS:
 ```go
 mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 ```
+
+For a tray menu that is renamed, extended and shortened as the app runs,
+see [the tray menu example](../examples/tray-menu). It changes the same
+menu from its window and from the menu itself.
 
 For an icon that opens a window of native UI, see
 [the menu bar example](https://github.com/egoist/mygo/tree/main/examples/menubar-native).

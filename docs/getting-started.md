@@ -219,7 +219,9 @@ The apps run where they are, but to ship them to users, sign them: see
     global shortcut, the clipboard and dark mode);
   - with native UI: `examples/clipboard` (copying and dragging text, HTML,
     lazy JSON, and file lists), `examples/counter-native` (a counter with a test of its
-    view), `examples/vibrancy` (a translucent sidebar under an inset title
+    view), `examples/tray-menu` (a window and a tray menu whose submenu is
+    renamed, extended and shortened as it runs), `examples/vibrancy` (a
+    translucent sidebar under an inset title
     bar, its material picked in it), `examples/effort-slider` (a web
     demo's animated slider redrawn: letters blurring in, a burst of
     pixels, a shaking card), `examples/confetti` (canvas-confetti's

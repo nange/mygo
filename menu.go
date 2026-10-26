@@ -106,7 +106,9 @@ type MenuItem struct {
 	ToolTip string
 	// Icon is an image shown beside the label (see NewMenuIcon), nil for
 	// none.
-	Icon    *MenuIcon
+	Icon *MenuIcon
+	// Submenu lists the items of a submenu, and makes the item one. Change
+	// a submenu in use through its Menu.
 	Submenu []*MenuItem
 	// Click is called on the main thread when the item is chosen. On Linux
 	// and Windows, win is the window whose menu bar or context menu was
@@ -184,6 +186,42 @@ func (m *Menu) Insert(pos int, item *MenuItem) {
 	m.items = append(m.items[:pos], append([]*MenuItem{prepareItem(item, m)}, m.items[pos:]...)...)
 	menuMu.Unlock()
 	refreshMenus()
+}
+
+// Remove removes items from the menu, which must hold them: a submenu's
+// items are removed from the submenu (MenuItem.Menu), not from the menu
+// that holds the submenu. Items not in the menu are ignored.
+func (m *Menu) Remove(items ...*MenuItem) {
+	menuMu.Lock()
+	removed := false
+	for _, item := range items {
+		for i, it := range m.items {
+			if it != item {
+				continue
+			}
+			copy(m.items[i:], m.items[i+1:])
+			m.items[len(m.items)-1] = nil
+			m.items = m.items[:len(m.items)-1]
+			item.parent = nil
+			removed = true
+			break
+		}
+	}
+	menuMu.Unlock()
+	if removed {
+		refreshMenus()
+	}
+}
+
+// Menu returns the menu of the item's submenu, nil for other items. Change
+// a submenu while the app runs through it, as its items are changed:
+//
+//	servers := menu.ItemByID("servers").Menu()
+//	servers.Append(&mygo.MenuItem{Label: "Tokyo"})
+func (it *MenuItem) Menu() *Menu {
+	menuMu.Lock()
+	defer menuMu.Unlock()
+	return it.sub
 }
 
 // ItemByID finds an item by ID in the menu and its submenus.

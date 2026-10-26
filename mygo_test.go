@@ -1554,6 +1554,56 @@ func TestMenuRolesAndState(t *testing.T) {
 	}
 }
 
+func TestMenuSubmenuChanges(t *testing.T) {
+	menu := NewMenu([]*MenuItem{
+		{ID: "servers", Label: "Servers", Submenu: []*MenuItem{}},
+		{ID: "quit", Label: "Quit"},
+	})
+	serversItem := menu.ItemByID("servers")
+	servers := serversItem.Menu()
+	if servers == nil {
+		t.Fatal("a submenu item has no menu")
+	}
+	if menu.ItemByID("servers").Menu() != servers {
+		t.Error("the submenu item's menu changed")
+	}
+	if menu.ItemByID("quit").Menu() != nil {
+		t.Error("an item that is not a submenu has a menu")
+	}
+
+	var clicked bool
+	tokyo := &MenuItem{ID: "tokyo", Label: "Tokyo", Click: func(*MenuItem, *Window) { clicked = true }}
+	servers.Append(tokyo)
+	if menu.ItemByID("tokyo") != tokyo {
+		t.Fatal("an appended submenu item is not found")
+	}
+	onMain(func() { fb.ClickMenuItem(tokyo.uid) })
+	if !clicked {
+		t.Error("the appended item's click did not run")
+	}
+
+	servers.Remove(tokyo)
+	if menu.ItemByID("tokyo") != nil {
+		t.Error("a removed submenu item is still found")
+	}
+	if len(servers.Items()) != 0 {
+		t.Errorf("the submenu has %d items after remove", len(servers.Items()))
+	}
+	servers.Remove(tokyo) // ignored
+	if menu.ItemByID("tokyo") != nil {
+		t.Error("removing an item not in the menu added it")
+	}
+
+	servers.Append(tokyo)
+	if menu.ItemByID("tokyo") != tokyo || serversItem.Menu() != servers {
+		t.Error("a removed item cannot be added again")
+	}
+	menu.Remove(menu.ItemByID("quit"))
+	if menu.ItemByID("quit") != nil {
+		t.Error("a removed item is still found")
+	}
+}
+
 func TestDefaultMenu(t *testing.T) {
 	m := fb.AppMenu()
 	if runtime.GOOS != "darwin" {
